@@ -1,33 +1,63 @@
-import matplotlib.pyplot as plt
+#!/usr/bin/python
+## -*- coding: utf-8 -*-
+#
+# Copyright (C) 2018
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+
+#
+#Author: Fernando Rodrigo Aguilar Javier
+#Author email: faguilar@comunidad.unam.mx
+
+#Detalles del codigo --------------------------------------------------------------------
+#Solo es necesario cambiar el campo de la variable path para que pandas encuentre el path
+#--------------------------------------------------------
+#--------------------------------------------------------
+#GENERATE DATA FOR LOAD FROM NPY NUMPY ARRAY
+#Total initial dataset: 
+###########################
+#Before
+#length of Data set train: 33543
+#Positive  Negative
+#1962      31581
+##################################%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%################################
+# import the necessary packages
+#Conda install matplotlib keras-gpu pandas scikit-learn ipython
+import numpy as np
 import pandas as pd
-import keras
-from skimage.transform import resize
-from skimage import io
-import glob
-import cv2
+import matplotlib.pyplot as plt
 from keras import backend as K
 from keras import regularizers
 from keras.models import Sequential
-from keras.layers.convolutional import Conv2D
-from keras.layers.convolutional import MaxPooling2D
 from keras.layers import BatchNormalization
 from keras.layers.core import Activation, Flatten, Dense, Dropout
-from keras.datasets import mnist
-from keras.utils import np_utils
+from keras.layers.convolutional import Conv2D, MaxPooling2D
 from keras.optimizers import SGD, RMSprop, Adam
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve
-import numpy as np
 import tensorflow as tf
-import matplotlib.pyplot as plt 
-#define the convnet 
+
 class LeNet:
 	@staticmethod
 	def build(input_shape, classes, DROPOUT=.1):
 		model = Sequential()
 		# CONV => RELU => POOL
-		model.add(Conv2D(8, kernel_size=5,  padding="same",kernel_regularizer=regularizers.l1_l2(l1=0.01, l2=0.01),
-			input_shape=input_shape))
+		model.add(Conv2D(8, kernel_size=5,  padding="valid", input_shape=input_shape))
+                        #kernel_regularizer=regularizers.l1_l2(l1=0.1, l2=0.1),
+                        #input_shape=input_shape))
 		model.add(Activation("relu"))
 		#model.add(Dropout(.3))
 		model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
@@ -35,12 +65,15 @@ class LeNet:
 		#model.add(Conv2D(16, kernel_size=5, padding="same"))
 		#model.add(Activation("relu"))
 		#model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        #model.add(Conv2D(16, kernel_size=5, padding="same"))
+		#model.add(Activation("relu"))
+		#model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 		# Flatten => RELU layers
 		model.add(Flatten())
-		model.add(Dense(512))
+		model.add(Dense(1000))
 		model.add(BatchNormalization())
 		model.add(Activation("relu"))
-		model.add(Dropout(.1))
+		#model.add(Dropout(.1))
 		# a softmax classifier
 		model.add(Dense(1))
 		model.add(Activation("sigmoid"))
@@ -50,8 +83,8 @@ class LeNet:
 
 def plot_roc_curve(fpr, tpr, label=None):
     plt.plot(fpr, tpr, linewidth=2, label=label)
-    plt.plot([0, 1], [0, 1], 'k--') # Dashed diagonal
-    plot_roc_curve(fpr, tpr)
+    #plt.plot([0, 1], [0, 1], 'k--') # Dashed diagonal
+    #plot_roc_curve(fpr, tpr)
     plt.show()
 
 
@@ -59,11 +92,11 @@ if __name__ == '__main__':
     # Constantes
     np.random.seed(1671)# for reproducibility
     # network and training
-    n, m = 8135, 4088
-    NB_EPOCH = 20
-    BATCH_SIZE = 64 #==> val_loss: 0.5326 - val_acc: 0.9849
+    n, m = 10847, 4088
+    NB_EPOCH = 7
+    BATCH_SIZE = 128#64
     VERBOSE = 1
-    OPTIMIZER = Adam(lr=0.00001)#lr=0.00001)
+    OPTIMIZER = Adam(lr=0.0001)#lr=0.00001)
     VALIDATION_SPLIT = 0.1
     IMG_ROWS, IMG_COLS = 64, 64 # input image dimensions
     INPUT_SHAPE = (IMG_ROWS, IMG_COLS, 3)
@@ -73,6 +106,7 @@ if __name__ == '__main__':
     Y = np.array(n * [0] + m * [1])
     Y = Y.reshape((-1, 1 ))
     X = np.array(X).reshape((-1, IMG_ROWS, IMG_COLS, 3 ))
+    #x_train, y_train = X, Y
     x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=.1, random_state=1671)
     model = LeNet.build(input_shape=INPUT_SHAPE, classes=NB_CLASSES)
     model.summary()
@@ -87,3 +121,10 @@ if __name__ == '__main__':
     #fpr, tpr, thresholds = roc_curve(y_test, y_pred)
     #plot_roc_curve(fpr, tpr)
     plt.show()
+    df = pd.DataFrame()
+    x_test = np.load('x_test64')
+    y_pred = model.predict(x_test)
+    df_test= pd.read_csv('test.csv')
+    df['image_name'] = df_test['image_name']
+    df['target'] = [i[0].round(1) for i in y_pred]
+    df.to_csv('submmit1', index=None)
