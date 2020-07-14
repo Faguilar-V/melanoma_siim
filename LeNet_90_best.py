@@ -58,7 +58,7 @@ class LeNet:
                         #kernel_regularizer=regularizers.l1_l2(l1=0.1, l2=0.1),
                         #input_shape=input_shape))
 		model.add(Activation("relu"))
-		model.add(Dropout(.3))
+		#model.add(Dropout(.3))
 		model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 		# CONV => RELU => POOL
 		model.add(Conv2D(16, kernel_size=5, padding="same"))
@@ -77,7 +77,7 @@ class LeNet:
 		model.add(Dense(1000))
 		model.add(BatchNormalization())
 		model.add(Activation("relu"))
-		model.add(Dropout(.3))
+		#model.add(Dropout(.1))
 		# a softmax classifier
 		model.add(Dense(1))
 		model.add(Activation("sigmoid"))
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     # network and training
     n, m =  8135, 4088#10847, 4088
     NB_EPOCH = 50
-    BATCH_SIZE = 128# bz_e 64_5 128_7 64_19
+    BATCH_SIZE = 64# bz_e 64_5 128_7 64_19
     VERBOSE = 1
     OPTIMIZER = Adam(lr=0.00001)#lr=0.00001)SGD, RMSprop, Adam
     VALIDATION_SPLIT = 0.1
